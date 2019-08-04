@@ -72,7 +72,7 @@ func Get(k string) (string,error) {
 	return res.(string),err
 }
 //SortedSet
-func ZSet(key string,k string, v string) error {
+func ZAdd(key string,k string, v string) error {
 	if RedisPool == nil {
 		return errors.New("redis pool is not init.")
 	}
@@ -81,4 +81,13 @@ func ZSet(key string,k string, v string) error {
 	var err error
 	_,err = conn.Do("ZADD",key,k,v)
 	return err
+}
+func ZRevRank(key string,k string) (int64,error) {
+	if RedisPool == nil {
+		return 0,errors.New("redis pool is not init.")
+	}
+	conn := RedisPool.Get()
+	defer conn.Close()
+	result,err := conn.Do("ZREVRANK",key,k)
+	return result.(int64),err
 }
