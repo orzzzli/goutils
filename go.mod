@@ -1,3 +1,3 @@
-module github.com/OrzzzLi/goUtils
+module util
 
-require github.com/gomodule/redigo v2.0.0+incompatible // indirect
+require github.com/gomodule/redigo v2.0.0+incompatible

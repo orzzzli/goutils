@@ -1,4 +1,4 @@
-package goUtils
+package util
 
 import "strconv"
 
