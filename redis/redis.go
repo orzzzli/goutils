@@ -1,4 +1,4 @@
-package goutils
+package redis
 
 import (
 	"errors"
@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-var RedisPool *redis.Pool
+var GlobalRedisPool *redis.Pool
 
 // NewRedisPool初始化连接池
 func NewRedisPool(url string, password string, idle int, idleTime int) {
-	RedisPool = &redis.Pool{
+	GlobalRedisPool = &redis.Pool{
 		MaxIdle:     idle,
 		IdleTimeout: time.Duration(idleTime) * time.Second,
 		Dial: func() (redis.Conn, error) {
@@ -38,10 +38,10 @@ func NewRedisPool(url string, password string, idle int, idleTime int) {
 
 //expire
 func Expire(k string, ex int) error {
-	if RedisPool == nil {
+	if GlobalRedisPool == nil {
 		return errors.New("redis pool is not init.")
 	}
-	conn := RedisPool.Get()
+	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	var err error
 	_,err = conn.Do("EXPIRE",k,ex)
@@ -49,10 +49,10 @@ func Expire(k string, ex int) error {
 }
 //string
 func Set(k string, v string, ex int) error {
-	if RedisPool == nil {
+	if GlobalRedisPool == nil {
 		return errors.New("redis pool is not init.")
 	}
-	conn := RedisPool.Get()
+	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	var err error
 	if ex <= 0 {
@@ -63,30 +63,30 @@ func Set(k string, v string, ex int) error {
 	return err
 }
 func Get(k string) (string,error) {
-	if RedisPool == nil {
+	if GlobalRedisPool == nil {
 		return "",errors.New("redis pool is not init.")
 	}
-	conn := RedisPool.Get()
+	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	res,err := conn.Do("GET",k)
 	return res.(string),err
 }
 //SortedSet
 func ZAdd(key string,k string, v string) error {
-	if RedisPool == nil {
+	if GlobalRedisPool == nil {
 		return errors.New("redis pool is not init.")
 	}
-	conn := RedisPool.Get()
+	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	var err error
 	_,err = conn.Do("ZADD",key,k,v)
 	return err
 }
 func ZRevRank(key string,k string) (int64,error) {
-	if RedisPool == nil {
+	if GlobalRedisPool == nil {
 		return 0,errors.New("redis pool is not init.")
 	}
-	conn := RedisPool.Get()
+	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	result,err := conn.Do("ZREVRANK",key,k)
 	return result.(int64),err
