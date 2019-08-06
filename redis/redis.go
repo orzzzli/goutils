@@ -3,6 +3,7 @@ package redis
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/orzzzli/goutils/convert"
 	"time"
 )
 
@@ -44,9 +45,10 @@ func Expire(k string, ex int) error {
 	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	var err error
-	_,err = conn.Do("EXPIRE",k,ex)
+	_, err = conn.Do("EXPIRE", k, ex)
 	return err
 }
+
 //string
 func Set(k string, v string, ex int) error {
 	if GlobalRedisPool == nil {
@@ -56,38 +58,51 @@ func Set(k string, v string, ex int) error {
 	defer conn.Close()
 	var err error
 	if ex <= 0 {
-		_,err = conn.Do("SET",k,v)
-	}else{
-		_,err = conn.Do("SET",k,v,"EX",ex)
+		_, err = conn.Do("SET", k, v)
+	} else {
+		_, err = conn.Do("SET", k, v, "EX", ex)
 	}
 	return err
 }
-func Get(k string) (string,error) {
+func Get(k string) (string, bool, error) {
 	if GlobalRedisPool == nil {
-		return "",errors.New("redis pool is not init.")
+		return "", false, errors.New("redis pool is not init.")
 	}
 	conn := GlobalRedisPool.Get()
 	defer conn.Close()
-	res,err := conn.Do("GET",k)
-	return res.(string),err
+	res, err := conn.Do("GET", k)
+	resOp := ""
+	find := false
+	if res != nil {
+		resOp = string(res.([]uint8))
+		find = true
+	}
+	return resOp, find, err
 }
+
 //SortedSet
-func ZAdd(key string,k string, v string) error {
+func ZAdd(key string, k string, v float32) error {
 	if GlobalRedisPool == nil {
 		return errors.New("redis pool is not init.")
 	}
 	conn := GlobalRedisPool.Get()
 	defer conn.Close()
 	var err error
-	_,err = conn.Do("ZADD",key,k,v)
+	_, err = conn.Do("ZADD", key, v, k)
 	return err
 }
-func ZRevRank(key string,k string) (int64,error) {
+func ZRevRank(key string, k string) (int, bool, error) {
 	if GlobalRedisPool == nil {
-		return 0,errors.New("redis pool is not init.")
+		return 0, false, errors.New("redis pool is not init.")
 	}
 	conn := GlobalRedisPool.Get()
 	defer conn.Close()
-	result,err := conn.Do("ZREVRANK",key,k)
-	return result.(int64),err
+	resultOp := 0
+	find := false
+	result, err := conn.Do("ZREVRANK", key, k)
+	if result != nil {
+		resultOp, _ = convert.Int64to32(result.(int64))
+		find = true
+	}
+	return resultOp, find, err
 }
