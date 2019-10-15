@@ -91,6 +91,16 @@ func ZAdd(key string, k string, v float32) error {
 	_, err = conn.Do("ZADD", key, v, k)
 	return err
 }
+func ZRem(key string,k string) error {
+	if GlobalRedisPool == nil {
+		return errors.New("redis pool is not init.")
+	}
+	conn := GlobalRedisPool.Get()
+	defer conn.Close()
+	var err error
+	_, err = conn.Do("ZREM", key, k)
+	return err
+}
 func ZRevRank(key string, k string) (int, bool, error) {
 	if GlobalRedisPool == nil {
 		return 0, false, errors.New("redis pool is not init.")
