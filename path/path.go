@@ -14,6 +14,21 @@ func GetFileName(path string) string {
 }
 
 /*
+	获取路径部分。(去掉最后一格内容)
+*/
+func GetPath(fullPath string) string {
+	tempList := strings.Split(fullPath,string(os.PathSeparator))
+	tempStr := ""
+	for k,v := range tempList {
+		if k == len(tempList)-1 {
+			break
+		}
+		tempStr += string(os.PathSeparator)+v
+	}
+	return tempStr[1:]
+}
+
+/*
 	获取两个路径的差值
 */
 func GetPathDiff(base string, other string, withFile bool) string {

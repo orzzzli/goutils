@@ -12,6 +12,13 @@ func TestGetFileName(t *testing.T) {
 	fmt.Println(res)
 }
 
+func TestGetPath(t *testing.T) {
+	res := GetPath("/Users/Orz/Documents/Github/goutils/go.mod")
+	fmt.Println(res)
+	res = GetPath("/Users/Orz/Documents/Github/goutils/")
+	fmt.Println(res)
+}
+
 func TestGetPathDiff(t *testing.T) {
 	res := GetPathDiff("/Users/Orz/Documents/Github/goutils/go.mod","/Users/Orz/Documents/Github",false)
 	fmt.Println(res)
