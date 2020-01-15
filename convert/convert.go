@@ -42,15 +42,4 @@ func Int32to64bitStr(number int) string {
 
 func InterfaceToStr(input interface{}) string {
 	return fmt.Sprint(input)
-	switch input.(type) {
-	case string:
-		return input.(string)
-	case int:
-		return strconv.Itoa(input.(int))
-	case int64:
-		return strconv.FormatInt(input.(int64),10)
-	default:
-		//非基本类型
-		return fmt.Sprint(input)
-	}
 }
