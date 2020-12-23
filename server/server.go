@@ -5,8 +5,9 @@ import (
 )
 
 const (
-	ServeTypeHttp = 0
-	ServeTypeGRPC = 1
+	ServeTypeHttp   = 0
+	ServeTypeGRPC   = 1
+	ServeTypeCustom = 2
 )
 
 type ServerInterface interface {
@@ -30,6 +31,9 @@ func NewServer(sType int, name string, address string) ServerInterface {
 		s := newGrpcServer(name, address)
 		s.gServer = grpc.NewServer()
 		return s
+	}
+	if sType == ServeTypeCustom {
+		return newCustomServer(name, address)
 	}
 	return nil
 }
