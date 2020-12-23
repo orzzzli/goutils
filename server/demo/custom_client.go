@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -19,7 +20,10 @@ func main() {
 	go func() {
 		buf := make([]byte, 1000)
 		for {
-			l, _ := conn.Read(buf)
+			l, err := conn.Read(buf)
+			if err == io.EOF {
+				break
+			}
 			fmt.Println("server send:" + string(buf[:l]))
 		}
 	}()
@@ -31,7 +35,10 @@ func main() {
 	// 给服务器发送信息直到程序退出：
 	for {
 		fmt.Println("message?")
-		input2, _ := inputReader.ReadString('\n')
+		input2, err := inputReader.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
 		trimmedInput2 := strings.Trim(input2, "\r\n")
 		_, err = conn.Write([]byte(strconv.Itoa(len(trimmedInput2)) + trimmedInput + trimmedInput2))
 	}

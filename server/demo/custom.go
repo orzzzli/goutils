@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"strconv"
 
 	server2 "github.com/orzzzli/goutils/server"
@@ -33,15 +34,24 @@ func main() {
 func testRead(reader *bufio.Reader, connIndex int) {
 	for {
 		//消息长度
-		tmp, _ := reader.ReadByte()
+		tmp, err := reader.ReadByte()
+		if err == io.EOF {
+			break
+		}
 		msgLen, _ := strconv.Atoi(string(tmp))
 		//消息路由
-		tmp, _ = reader.ReadByte()
+		tmp, err = reader.ReadByte()
+		if err == io.EOF {
+			break
+		}
 		url := string(tmp)
 
 		msg := ""
 		for i := 0; i < msgLen; i++ {
-			tmp1, _ := reader.ReadByte()
+			tmp1, err := reader.ReadByte()
+			if err == io.EOF {
+				break
+			}
 			msg += string(tmp1)
 		}
 		//同步调用方法
