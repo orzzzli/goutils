@@ -9,6 +9,8 @@ import (
 
 type httpServer struct {
 	Server
+	certFile string
+	keyFile  string
 }
 
 func newHttpServer(name string, address string) *httpServer {
@@ -19,12 +21,21 @@ func newHttpServer(name string, address string) *httpServer {
 	return t
 }
 
+func (h *httpServer) SetTLS(certFile, keyFile string) {
+	h.certFile = certFile
+	h.keyFile = keyFile
+}
+
 func (h *httpServer) Serve() error {
 	l, err := net.Listen("tcp", h.address)
 	if err != nil {
 		return err
 	}
-	err = http.Serve(l, h)
+	if h.certFile != "" && h.keyFile != "" {
+		err = http.ServeTLS(l, h, h.certFile, h.keyFile)
+	} else {
+		err = http.Serve(l, h)
+	}
 	if err != nil {
 		return err
 	}
