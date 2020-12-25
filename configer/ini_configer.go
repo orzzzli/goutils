@@ -81,6 +81,9 @@ func (i *IniConfiger) Invoke() error {
 	}
 	defer file.Close()
 
+	i.sections = make(map[string]map[string]string, 10)
+	i.configMap = make(map[string]string, 10)
+
 	reader := bufio.NewReader(file)
 	lastSection := ""
 	for {
