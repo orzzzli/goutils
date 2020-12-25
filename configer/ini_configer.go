@@ -27,7 +27,6 @@ type IniConfiger struct {
 	commentChar byte
 
 	lastMD5   string
-	reader    *bufio.Reader
 	sections  map[string]map[string]string
 	configMap map[string]string
 }
@@ -119,8 +118,6 @@ func (i *IniConfiger) Invoke() error {
 			i.sections[lastSection][key] = value
 		}
 	}
-	reader.Reset(reader)
-	i.reader = reader
 	return nil
 }
 
@@ -130,12 +127,12 @@ func (i *IniConfiger) Invoke() error {
 func (i *IniConfiger) hotLoadingConfiger() error {
 	for {
 		if i.hotLoading {
-			//file, err := os.Open(ConfigerInfoObj.Path)
-			//if err != nil {
-			//	return errors.New("open config file err : " + err.Error())
-			//}
+			file, err := os.Open(i.path)
+			if err != nil {
+				return errors.New("open config file err : " + err.Error())
+			}
 			md5Obj := md5.New()
-			_, err := io.Copy(md5Obj, i.reader)
+			_, err = io.Copy(md5Obj, file)
 			if err != nil {
 				return errors.New("io copy file error : " + err.Error())
 			}
@@ -149,6 +146,7 @@ func (i *IniConfiger) hotLoadingConfiger() error {
 					return err
 				}
 			}
+			file.Close()
 		}
 
 		time.Sleep(time.Duration(i.scanSec) * time.Second)
