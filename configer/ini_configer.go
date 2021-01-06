@@ -20,11 +20,13 @@ const (
 )
 
 type IniConfiger struct {
-	path        string
-	hotLoading  bool
-	scanSec     int
-	debug       bool
-	commentChar byte
+	path              string
+	hotLoading        bool
+	scanSec           int
+	debug             bool
+	commentChar       byte
+	started           bool
+	hotLoadingErrChan chan error
 
 	lastMD5   string
 	sections  map[string]map[string]string
@@ -49,9 +51,11 @@ func NewiniConfiger(path string) (*IniConfiger, error) {
 		scanSec:     DefaultScanSec,
 		debug:       DefaultDebug,
 		commentChar: DefaultCommentChar,
+		started:     false,
 
-		sections:  make(map[string]map[string]string, 10),
-		configMap: make(map[string]string, 10),
+		hotLoadingErrChan: make(chan error, 10),
+		sections:          make(map[string]map[string]string, 10),
+		configMap:         make(map[string]string, 10),
 	}, nil
 }
 
@@ -121,23 +125,27 @@ func (i *IniConfiger) Invoke() error {
 			i.sections[lastSection][key] = value
 		}
 	}
+	if !i.started {
+		go i.hotLoadingConfiger()
+	}
 	return nil
 }
 
 /*
 	Hot Loading config while file md5 changed.
 */
-func (i *IniConfiger) hotLoadingConfiger() error {
+func (i *IniConfiger) hotLoadingConfiger() {
+	i.started = true
 	for {
 		if i.hotLoading {
 			file, err := os.Open(i.path)
 			if err != nil {
-				return errors.New("open config file err : " + err.Error())
+				i.hotLoadingErrChan <- errors.New("open config file err : " + err.Error())
 			}
 			md5Obj := md5.New()
 			_, err = io.Copy(md5Obj, file)
 			if err != nil {
-				return errors.New("io copy file error : " + err.Error())
+				i.hotLoadingErrChan <- errors.New("io copy file error : " + err.Error())
 			}
 			md5Str := hex.EncodeToString(md5Obj.Sum(nil))
 			//first time
@@ -146,7 +154,7 @@ func (i *IniConfiger) hotLoadingConfiger() error {
 			} else if i.lastMD5 != md5Str { //config file changed
 				err = i.Invoke()
 				if err != nil {
-					return err
+					i.hotLoadingErrChan <- err
 				}
 			}
 			file.Close()
@@ -179,6 +187,25 @@ func (i *IniConfiger) GetInt(section string, key string) (int, bool) {
 		return 0, false
 	}
 	return -1, false
+}
+
+/*
+	Get whole section map.
+*/
+func (i *IniConfiger) GetSection(section string) (map[string]string, bool) {
+	value, ok := i.sections[section]
+	return value, ok
+}
+
+/*
+	Get whole section map.
+*/
+func (i *IniConfiger) GetWholeMap(section string) map[string]string {
+	return i.configMap
+}
+
+func (i *IniConfiger) GetHotLoadingErr() error {
+	return <-i.hotLoadingErrChan
 }
 
 /*
